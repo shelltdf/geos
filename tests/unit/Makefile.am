@@ -75,6 +75,7 @@ geos_unit_SOURCES = \
 	noding/BasicSegmentStringTest.cpp \
 	noding/NodedSegmentStringTest.cpp \
 	noding/OrientedCoordinateArray.cpp \
+	noding/ScaledNoderTest.cpp \
 	noding/SegmentNodeTest.cpp \
 	noding/SegmentPointComparatorTest.cpp \
 	noding/snapround/HotPixelTest.cpp \
