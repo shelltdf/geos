@@ -98,24 +98,24 @@ namespace tut
         vct.push_back( new NodedSegmentString(s.release(), 0) );
       }
 
-      GeomPtr readGeometry(const std::string& wkt)
-      {
-        GeomPtr g;
-        if ( wkt[0] == '0' || wkt[0] == '1' ) {
-          WKBReader r;
-          std::istringstream is(wkt);
-          g.reset( r.readHEX(is) );
-        } else {
-          WKTReader r;
-          g.reset( r.read(wkt) );
-        }
-        return g;
+    GeomPtr readGeometry(const std::string& wkt)
+    {
+      GeomPtr g;
+      if ( wkt[0] == '0' || wkt[0] == '1' ) {
+        WKBReader r;
+        std::istringstream is(wkt);
+        g.reset( r.readHEX(is) );
+      } else {
+        WKTReader r;
+        g.reset( r.read(wkt) );
       }
+      return g;
+    }
 
 
-      void getSegmentStrings(const std::string& wkt, SegStrVct& vct)
-      {
-        GeomPtr g = readGeometry(wkt);
+    void getSegmentStrings(const std::string& wkt, SegStrVct& vct)
+    {
+      GeomPtr g = readGeometry(wkt);
         getSegmentStrings(*g, vct);
       }
 
