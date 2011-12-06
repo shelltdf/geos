@@ -382,10 +382,10 @@ BufferBuilder::buffer(const Geometry *g, double distance)
 
 	std::vector<SegmentString*>& bufferSegStrList=curveSetBuilder.getCurves();
 
-#if GEOS_DEBUG
+//#if GEOS_DEBUG
 	std::cerr << "OffsetCurveSetBuilder got " << bufferSegStrList.size()
 	          << " curves" << std::endl;
-#endif
+//#endif
 	// short-circuit test
 	if (bufferSegStrList.size()<=0) {
 		return createEmptyResultGeometry();
@@ -395,13 +395,15 @@ BufferBuilder::buffer(const Geometry *g, double distance)
 	std::cerr<<"BufferBuilder::buffer computing NodedEdges"<<std::endl;
 #endif
 
+//std::cerr << std::endl << std::setprecision(14) << *(bufferSegStrList[0]) << std::endl;
+
 	computeNodedEdges(bufferSegStrList, precisionModel);
 
   } // bufferSegStrList and contents are released here
 
-#if GEOS_DEBUG > 1
-	std::cerr << std::endl << edgeList << std::endl;
-#endif
+//#if GEOS_DEBUG > 1
+//	std::cerr << std::endl << std::setprecision(14) << edgeList << std::endl;
+//#endif
 
 	Geometry* resultGeom=NULL;
 	std::auto_ptr< std::vector<Geometry*> > resultPolyList;
@@ -509,27 +511,29 @@ BufferBuilder::computeNodedEdges(SegmentString::NonConstVect& bufferSegStrList,
 {
 	Noder* noder = getNoder( precisionModel );
 
-#if JTS_DEBUG
+//#if JTS_DEBUG
 geos::io::WKTWriter wktWriter; wktWriter.setTrim(true);
+wktWriter.setRoundingPrecision(12);
 std::cerr << "before noding: "
   << wktWriter.write(
         convertSegStrings(geomFact, bufferSegStrList.begin(),
                                     bufferSegStrList.end()).get()
      ) << std::endl;
-#endif
+//#endif
 
 	noder->computeNodes(&bufferSegStrList);
 
 	SegmentString::NonConstVect* nodedSegStrings = \
 			noder->getNodedSubstrings();
 
-#if JTS_DEBUG
-std::cerr << "after noding: "
+//#if JTS_DEBUG
+std::cerr << "after noding we have " << nodedSegStrings->size() << " noded seg strings" << std::endl
+
   << wktWriter.write(
-        convertSegStrings(geomFact, bufferSegStrList.begin(),
-                                    bufferSegStrList.end()).get()
+        convertSegStrings(geomFact, nodedSegStrings->begin(),
+                                    nodedSegStrings->end()).get()
      ) << std::endl;
-#endif
+//#endif
 
 
 	for (SegmentString::NonConstVect::iterator

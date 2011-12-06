@@ -37,6 +37,9 @@
 #include <string>
 #endif
 
+#include <iostream>
+#include <iomanip>
+
 using namespace geos::geom;
 
 
@@ -87,8 +90,10 @@ public:
 	//void filter_ro(const geom::Coordinate* c) { assert(0); }
 
 	void filter_rw(geom::Coordinate* c) const {
+		std::cout << "B: (" << std::setprecision(10) << *c << std::endl;
 		c->x = util::round( ( c->x - sn.offsetX ) * sn.scaleFactor );
 		c->y = util::round( ( c->y - sn.offsetY ) * sn.scaleFactor );
+		std::cout << "A: (" << std::setprecision(10) << *c << std::endl;
 	}
 
 private:
@@ -193,7 +198,6 @@ ScaledNoder::getNodedSubstrings() const
 #if GEOS_DEBUG > 1
 	sqlPrint("nodedSegStr", *splitSS);
 #endif
-
 	if ( isScaled ) rescale(*splitSS);
 
 #if GEOS_DEBUG > 1

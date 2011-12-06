@@ -33,12 +33,14 @@
 #include <geos/noding/snapround/MCIndexSnapRounder.h>
 #include <geos/noding/snapround/MCIndexPointSnapper.h>
 
-//FIXME: for temporary use, see other FIXME in file
+//FIXME: no more used headers, drop 
 #include <geos/algorithm/LineIntersector.h>
 #include <geos/noding/MCIndexNoder.h>
 #include <geos/noding/IntersectionAdder.h>
 #include <geos/noding/snapround/SimpleSnapRounder.h>
 
+#include <iostream>
+using namespace std;
 
 
 
@@ -59,11 +61,10 @@ namespace buffer { // geos.operation.buffer
 static Profiler *profiler = Profiler::instance();
 #endif
 
-/*private*/
-double
-BufferOp::precisionScaleFactor(const Geometry *g,
-	double distance,
-	int maxPrecisionDigits)
+namespace {
+
+double OLDprecisionScaleFactor(const Geometry *g,
+	double distance, int maxPrecisionDigits)
 {
 	const Envelope *env=g->getEnvelopeInternal();
 	double envSize=(std::max)(env->getHeight(), env->getWidth());
@@ -75,6 +76,40 @@ BufferOp::precisionScaleFactor(const Geometry *g,
 	// scale factor is inverse of min Unit size, so flip sign of exponent
 	double scaleFactor=std::pow(10.0,-minUnitLog10);
 	return scaleFactor;
+}
+
+} // anonymous namespace
+
+/*private*/
+double
+BufferOp::precisionScaleFactor(const Geometry *g,
+	double distance,
+	int maxPrecisionDigits)
+{
+	const Envelope *env=g->getEnvelopeInternal();
+  double envMax = std::max(
+            std::max(fabs(env->getMaxX()), fabs(env->getMinX())),
+            std::max(fabs(env->getMaxY()), fabs(env->getMinY()))
+  );
+
+  double expandByDistance = distance > 0.0 ? distance : 0.0;
+  double bufEnvMax = envMax + 2 * expandByDistance;
+
+  // the smallest power of 10 greater than the buffer envelope
+  int bufEnvPrecisionDigits = (int) (std::log(bufEnvMax) / std::log(10) + 1.0);
+  int minUnitLog10 = maxPrecisionDigits - bufEnvPrecisionDigits;
+
+  double scaleFactor = std::pow(10.0, minUnitLog10);
+
+  double OLDscaleFactor = OLDprecisionScaleFactor(g, distance, maxPrecisionDigits);
+  if ( std::abs(scaleFactor - OLDscaleFactor) > 1 ) {
+    cerr << "Max precision digits: " << maxPrecisionDigits << endl;
+    cerr << " OLD scale factor: " << OLDscaleFactor << endl;
+    cerr << " NEW scale factor: " << scaleFactor << endl;
+  }
+  //return OLDscaleFactor;
+
+  return scaleFactor;
 }
 
 /*public static*/
@@ -106,8 +141,7 @@ BufferOp::computeGeometry()
 	std::cerr<<"BufferOp::computeGeometry: trying with original precision"<<std::endl;
 #endif
 
-	//bufferReducedPrecision(); return; // FIXME: remove this code
-	bufferOriginalPrecision();
+	//bufferOriginalPrecision();
 
 	if (resultGeometry!=NULL) return;
 
@@ -146,6 +180,7 @@ BufferOp::bufferReducedPrecision()
 			//if ( saveException ) std::cerr<<saveException->toString()<<std::endl;
 			return;
 		}
+    break;
 	}
 	// tried everything - have to bail
 	throw saveException;
@@ -178,11 +213,11 @@ BufferOp::bufferReducedPrecision(int precisionDigits)
 {
 	double sizeBasedScaleFactor=precisionScaleFactor(argGeom, distance, precisionDigits);
 
-#if GEOS_DEBUG
+//#if GEOS_DEBUG
 	std::cerr << "recomputing with precision scale factor = "
 		<< sizeBasedScaleFactor
 		<< std::endl;
-#endif
+//#endif
 
 	assert(sizeBasedScaleFactor>0);
 	PrecisionModel fixedPM(sizeBasedScaleFactor);
