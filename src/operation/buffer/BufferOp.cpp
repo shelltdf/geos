@@ -25,8 +25,11 @@
 #include <geos/precision/GeometryPrecisionReducer.h>
 #include <geos/operation/buffer/BufferOp.h>
 #include <geos/operation/buffer/BufferBuilder.h>
+#include <geos/operation/union/CascadedUnion.h>
 #include <geos/geom/Geometry.h>
+#include <geos/geom/Polygon.h>
 #include <geos/geom/GeometryFactory.h>
+#include <geos/geom/GeometryComponentFilter.h> 
 #include <geos/geom/PrecisionModel.h>
 
 #include <geos/noding/ScaledNoder.h>
@@ -114,12 +117,80 @@ BufferOp::bufferOp(const Geometry *g, double distance,
 	return bufOp.getResultGeometry(distance);
 }
 
+// TODO: export in some C++ header
+namespace {
+
+class ComponentExtracter: public geos::geom::GeometryComponentFilter {
+       geos::geom::Geometry::ConstVect &comps;
+public:
+  ComponentExtracter(geos::geom::Geometry::ConstVect& toVect) : comps(toVect) {}
+       void filter_rw(geos::geom::Geometry *geom) { filter_ro(geom); }
+       void filter_ro(const geos::geom::Geometry *geom) { comps.push_back(geom); }
+};
+
+}
+
 /*public*/
 Geometry*
 BufferOp::getResultGeometry(double nDistance)
 {
 	distance=nDistance;
+
+#define GEOS_CASCADED_BUFFER 1
+#ifdef GEOS_CASCADED_BUFFER
+  const Geometry* origArgGeom = argGeom;
+  std::vector<Geometry*> resComponents;
+
+  try {
+    Geometry::ConstVect components;
+    ComponentExtracter extracter(components);
+    argGeom->apply_ro(&extracter);
+#if GEOS_DEBUG
+std::cerr << "Buffering " << components.size() << " components" << std::endl;
+#endif
+    for (Geometry::ConstVect::size_type i=0; i<components.size(); ++i)
+    {
+      resultGeometry = 0;
+      argGeom = components[i];
+#if GEOS_DEBUG
+      std::cerr << " buffering component " << (i+1) << "/" << components.size()
+                << " with " << argGeom->getNumPoints() << " points" << std::endl;
+#endif
+      computeGeometry();
+#if GEOS_DEBUG
+      std::cerr << " buffered component " << (i+1) << "/" << components.size()
+                << " has " << resultGeometry->getNumPoints() << " points" << std::endl;
+#endif
+      if ( resultGeometry->getNumPoints() ) {
+        resComponents.push_back(resultGeometry);
+      } else {
+        delete resultGeometry;
+      }
+    }
+    if ( resComponents.size() ) {
+#if GEOS_DEBUG
+      std::cerr << "CascadeUnioning " << resComponents.size() << " components" << std::endl;
+#endif
+      geounion::CascadedUnion unOp(&resComponents);
+      resultGeometry = unOp.Union();
+    } else {
+      resultGeometry = origArgGeom->getFactory()->createPolygon(NULL, NULL);
+    }
+  } catch (const std::exception& e) {
+    for (size_t i=0; i<resComponents.size(); ++i)
+      delete resComponents[i];
+    argGeom = origArgGeom;
+    throw e;
+  }
+  for (std::vector<geos::geom::Geometry*>::size_type i=0;
+       i<resComponents.size(); ++i)
+  {
+    delete resComponents[i];
+  }
+  argGeom = origArgGeom;
+#else
 	computeGeometry();
+#endif
 	return resultGeometry;
 }
 
