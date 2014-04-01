@@ -34,6 +34,7 @@
 #include <geos/geom/Coordinate.h> 
 #include <geos/geom/IntersectionMatrix.h> 
 #include <geos/geom/Envelope.h> 
+#include <geos/geom/GeometryComponentFilter.h> 
 #include <geos/index/strtree/STRtree.h> 
 #include <geos/index/ItemVisitor.h>
 #include <geos/io/WKTReader.h>
@@ -58,6 +59,7 @@
 #include <geos/operation/relate/RelateOp.h>
 #include <geos/operation/sharedpaths/SharedPathsOp.h>
 #include <geos/operation/union/CascadedPolygonUnion.h>
+#include <geos/operation/union/CascadedUnion.h>
 #include <geos/operation/valid/IsValidOp.h>
 #include <geos/linearref/LengthIndexedLine.h>
 #include <geos/triangulate/DelaunayTriangulationBuilder.h>
@@ -1661,36 +1663,26 @@ GEOSIntersection_r(GEOSContextHandle_t extHandle, const Geometry *g1, const Geom
     return NULL;
 }
 
+// TODO: export in some C++ header
+namespace {
+
+class ComponentExtracter: public geos::geom::GeometryComponentFilter {
+       geos::geom::Geometry::ConstVect &comps;
+public:
+  ComponentExtracter(geos::geom::Geometry::ConstVect& toVect) : comps(toVect) {}
+       void filter_rw(geos::geom::Geometry *geom) { filter_ro(geom); }
+       void filter_ro(const geos::geom::Geometry *geom) { comps.push_back(geom); }
+};
+
+}
+
+
 Geometry *
 GEOSBuffer_r(GEOSContextHandle_t extHandle, const Geometry *g1, double width, int quadrantsegments)
 {
-    if ( 0 == extHandle )
-    {
-        return NULL;
-    }
-
-    GEOSContextHandleInternal_t *handle = 0;
-    handle = reinterpret_cast<GEOSContextHandleInternal_t*>(extHandle);
-    if ( 0 == handle->initialized )
-    {
-        return NULL;
-    }
-
-    try
-    {
-        Geometry *g3 = g1->buffer(width, quadrantsegments);
-        return g3;
-    }
-    catch (const std::exception &e)
-    {
-        handle->ERROR_MESSAGE("%s", e.what());
-    }
-    catch (...)
-    {
-        handle->ERROR_MESSAGE("Unknown exception thrown");
-    }
-    
-    return NULL;
+  return GEOSBufferWithStyle_r(extHandle, g1, width, quadrantsegments,
+                               BufferParameters::CAP_ROUND,
+                               BufferParameters::JOIN_ROUND, 0);
 }
 
 Geometry *
@@ -1699,6 +1691,7 @@ GEOSBufferWithStyle_r(GEOSContextHandle_t extHandle, const Geometry *g1, double 
     using geos::operation::buffer::BufferParameters;
     using geos::operation::buffer::BufferOp;
     using geos::util::IllegalArgumentException;
+    using geos::operation::geounion::CascadedUnion;
 
     if ( 0 == extHandle )
     {
@@ -1711,6 +1704,8 @@ GEOSBufferWithStyle_r(GEOSContextHandle_t extHandle, const Geometry *g1, double 
     {
         return NULL;
     }
+
+    std::vector<Geometry*> resComponents;
 
     try
     {
@@ -1733,9 +1728,18 @@ GEOSBufferWithStyle_r(GEOSContextHandle_t extHandle, const Geometry *g1, double 
         	static_cast<BufferParameters::JoinStyle>(joinStyle)
         );
         bp.setMitreLimit(mitreLimit);
-        BufferOp op(g1, bp);
-        Geometry *g3 = op.getResultGeometry(width);
-        return g3;
+
+        Geometry::ConstVect components;
+        ComponentExtracter extracter(components);
+        g1->apply_ro(&extracter);
+        for (Geometry::ConstVect::size_type i=0; i<components.size(); ++i)
+        {
+          BufferOp op(components[i], bp);
+          Geometry *g = op.getResultGeometry(width);
+          resComponents.push_back(g);
+        }
+        CascadedUnion unOp;
+        return unOp.Union(resComponents.begin(), resComponents.end());
     }
     catch (const std::exception &e)
     {
@@ -1744,6 +1748,12 @@ GEOSBufferWithStyle_r(GEOSContextHandle_t extHandle, const Geometry *g1, double 
     catch (...)
     {
         handle->ERROR_MESSAGE("Unknown exception thrown");
+    }
+
+    for (std::vector<geos::geom::Geometry*>::size_type i=0;
+         i<resComponents.size(); ++i)
+    {
+      delete resComponents[i];
     }
     
     return NULL;
