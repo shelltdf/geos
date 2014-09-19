@@ -17,7 +17,7 @@
 
 #include <geos/geom/GeometryFactory.h>
 #include <geos/geom/PrecisionModel.h>
-#include "tinyxml/tinyxml.h"
+#include "tinyxml2/tinyxml2.h"
 
 using namespace geos;
 
@@ -34,10 +34,10 @@ private:
 		PRED
 	};
 
-	void parsePrecisionModel(const TiXmlElement* el);
-	void parseRun(const TiXmlNode* node);
-	void parseCase(const TiXmlNode* node);
-	void parseTest(const TiXmlNode* node);
+	void parsePrecisionModel(const tinyxml2::XMLElement* el);
+	void parseRun(const tinyxml2::XMLNode* node);
+	void parseCase(const tinyxml2::XMLNode* node);
+	void parseTest(const tinyxml2::XMLNode* node);
 	void runPredicates(const geom::Geometry *a, const geom::Geometry *b);
 	geom::Geometry *parseGeometry(const std::string &in, const char* label="parsed");
 	static std::string trimBlanks(const std::string &in);
@@ -55,7 +55,7 @@ private:
 	std::auto_ptr<io::WKTWriter> wktwriter;
 	std::auto_ptr<io::WKBReader> wkbreader;
 	std::auto_ptr<io::WKBWriter> wkbwriter;
-	TiXmlDocument xml;
+	tinyxml2::XMLDocument xml;
 
 	int verbose;
 	int test_predicates;
