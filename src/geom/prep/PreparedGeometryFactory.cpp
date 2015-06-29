@@ -36,7 +36,7 @@ namespace geos {
 namespace geom { // geos.geom
 namespace prep { // geos.geom.prep
 
-const PreparedGeometry *
+PreparedGeometry *
 PreparedGeometryFactory::create( const geom::Geometry * g) const
 {
     using geos::geom::GeometryTypeId;

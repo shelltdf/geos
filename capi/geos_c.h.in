@@ -687,7 +687,7 @@ extern char GEOS_DLL GEOSCoveredBy_r(GEOSContextHandle_t handle,
 /*
  * GEOSGeometry ownership is retained by caller
  */
-extern const GEOSPreparedGeometry GEOS_DLL *GEOSPrepare_r(
+extern GEOSPreparedGeometry GEOS_DLL *GEOSPrepare_r(
                                             GEOSContextHandle_t handle,
                                             const GEOSGeometry* g);
 
@@ -1505,7 +1505,7 @@ extern char GEOS_DLL GEOSCoveredBy(const GEOSGeometry* g1, const GEOSGeometry* g
 /*
  * GEOSGeometry ownership is retained by caller
  */
-extern const GEOSPreparedGeometry GEOS_DLL *GEOSPrepare(const GEOSGeometry* g);
+extern GEOSPreparedGeometry GEOS_DLL *GEOSPrepare(const GEOSGeometry* g);
 
 extern void GEOS_DLL GEOSPreparedGeom_destroy(const GEOSPreparedGeometry* g);
 

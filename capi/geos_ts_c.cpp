@@ -5077,7 +5077,7 @@ GEOSWKBWriter_setIncludeSRID_r(GEOSContextHandle_t extHandle, GEOSWKBWriter* wri
 // Prepared Geometry 
 //-----------------------------------------------------------------
 
-const geos::geom::prep::PreparedGeometry*
+geos::geom::prep::PreparedGeometry*
 GEOSPrepare_r(GEOSContextHandle_t extHandle, const Geometry *g)
 {
     if ( 0 == extHandle )
@@ -5092,7 +5092,7 @@ GEOSPrepare_r(GEOSContextHandle_t extHandle, const Geometry *g)
         return 0;
     }
 
-    const geos::geom::prep::PreparedGeometry* prep = 0;
+    geos::geom::prep::PreparedGeometry* prep = 0;
 
     try
     {

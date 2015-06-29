@@ -59,7 +59,7 @@ public:
 	* @param geom the geometry to prepare
 	* @return the prepared geometry
 	*/
-	static const PreparedGeometry * prepare(const geom::Geometry * geom) 
+	static PreparedGeometry * prepare(const geom::Geometry * geom) 
 	{
 		PreparedGeometryFactory pf;
 		return pf.create(geom); 
@@ -81,7 +81,7 @@ public:
 	* @param geom the geometry to prepare
 	* @return the prepared geometry
 	*/
-	const PreparedGeometry* create(const geom::Geometry* geom) const;
+	PreparedGeometry* create(const geom::Geometry* geom) const;
 
 };
 

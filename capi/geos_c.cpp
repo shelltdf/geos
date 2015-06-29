@@ -1027,7 +1027,7 @@ GEOSWKBWriter_setIncludeSRID(GEOSWKBWriter* writer, const char newIncludeSRID)
 // Prepared Geometry
 //-----------------------------------------------------------------
 
-const geos::geom::prep::PreparedGeometry*
+geos::geom::prep::PreparedGeometry*
 GEOSPrepare(const Geometry *g)
 {
     return GEOSPrepare_r( handle, g );
