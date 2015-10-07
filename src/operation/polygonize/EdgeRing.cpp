@@ -55,39 +55,37 @@ EdgeRing::findEdgeRingContaining(EdgeRing *testEr,
     const Envelope *testEnv=testRing->getEnvelopeInternal();
     Coordinate testPt=testRing->getCoordinateN(0);
     EdgeRing *minShell=NULL;
-    const Envelope *minEnv=NULL;
+    const Envelope *minShellEnv=NULL;
 
     typedef std::vector<EdgeRing*> ERList;
     for(ERList::size_type i=0, e=shellList->size(); i<e; ++i) {
-        EdgeRing *tryShell=(*shellList)[i];
-        LinearRing *tryRing=tryShell->getRingInternal();
-        const Envelope *tryEnv=tryRing->getEnvelopeInternal();
-        if (minShell!=NULL) minEnv=minShell->getRingInternal()->getEnvelopeInternal();
-        bool isContained=false;
+        EdgeRing *tryShell = (*shellList)[i];
+        LinearRing *tryShellRing = tryShell->getRingInternal();
+        const Envelope *tryShellEnv = tryShellRing->getEnvelopeInternal();
 
         // the hole envelope cannot equal the shell envelope
+        // (also guards against testing rings against themselves)
+        if (tryShellEnv->equals(testEnv)) continue;
+        // hole must be contained in shell
+        if (! tryShellEnv->contains(testEnv)) continue;
 
-        if (tryEnv->equals(testEnv)) continue;
+        const CoordinateSequence *tryCoords = tryShellRing->getCoordinatesRO();
+        // TODO: don't copy testPt !
+        testPt = ptNotInList(testRing->getCoordinatesRO(), tryCoords);
 
-        const CoordinateSequence *tryCoords =
-            tryRing->getCoordinatesRO();
-
-        if ( tryEnv->contains(testEnv) ) {
-
-            // TODO: don't copy testPt !
-            testPt = ptNotInList(testRing->getCoordinatesRO(), tryCoords);
-
-            if ( CGAlgorithms::isPointInRing(testPt, tryCoords) ) {
-                isContained=true;
-            }
-
-    }
+        bool isContained=false;
+        if ( CGAlgorithms::isPointInRing(testPt, tryCoords) ) {
+            isContained=true;
+        }
 
         // check if this new containing ring is smaller
         // than the current minimum ring
         if (isContained) {
-            if (minShell==NULL || minEnv->contains(tryEnv)) {
-                minShell=tryShell;
+            if ( minShell == NULL
+                 || minShellEnv->contains(tryShellEnv) )
+            {
+                minShell = tryShell;
+                minShellEnv = minShell->getRingInternal()->getEnvelopeInternal();
             }
         }
     }

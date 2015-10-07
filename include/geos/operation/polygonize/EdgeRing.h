@@ -96,8 +96,8 @@ public:
 	 * (which is guaranteed to be the case if the hole does not touch
 	 * its shell)
 	 *
-	 * @return containing EdgeRing, if there is one
-	 * @return null if no containing EdgeRing is found
+	 * @return containing EdgeRing, if there is one, or
+	 *         null if no containing EdgeRing is found
 	 */
 	static EdgeRing* findEdgeRingContaining(
 			EdgeRing *testEr,
