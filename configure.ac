@@ -147,7 +147,7 @@ AC_LIBTOOL_LANG_CXX_CONFIG
 WARNFLAGS=""
 AC_LIBTOOL_COMPILER_OPTION([if $compiler supports -pedantic], [dummy_cv_pedantic], [-pedantic], [], [WARNFLAGS="$WARNFLAGS -pedantic"], [])
 AC_LIBTOOL_COMPILER_OPTION([if $compiler supports -Wall], [dummy_cv_wall], [-Wall], [], [WARNFLAGS="$WARNFLAGS -Wall"], [])
-AC_LIBTOOL_COMPILER_OPTION([if $compiler supports -ansi], [dummy_cv_ansi], [-ansi], [], [WARNFLAGS="$WARNFLAGS -ansi"], [])
+AC_LIBTOOL_COMPILER_OPTION([if $compiler supports -std=c99], [dummy_cv_c99std], [-std=c99], [], [WARNFLAGS="$WARNFLAGS -std=c99"], [])
 AC_LIBTOOL_COMPILER_OPTION([if $compiler supports -Wno-long-long], [dummy_cv_no_long_long], [-Wno-long-long], [], [WARNFLAGS="$WARNFLAGS -Wno-long-long"], [])
 
 # To make numerical computation more stable, we use --ffloat-store

@@ -97,7 +97,7 @@ endif()
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
 
   # General options
-  set(CMAKE_CXX_FLAGS "-pedantic -ansi ${CMAKE_CXX_FLAGS}")
+  set(CMAKE_CXX_FLAGS "-pedantic -std=c99 ${CMAKE_CXX_FLAGS}")
 
   # Numerical stability
   if(GEOS_ENABLE_FLOATSTORE)
